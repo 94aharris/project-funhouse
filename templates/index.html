@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emoji Catcher - Catch the Good Vibes!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        #gameCanvas {
+            background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 100%);
+            border: 4px solid white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: block;
+            margin: 20px auto;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            margin-top: 5px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .controls p {
+            margin: 5px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .game-over h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #f5576c;
+        }
+
+        .game-over p {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        #finalScore {
+            font-size: 2em;
+            color: #f093fb;
+            font-weight: bold;
+        }
+
+        .emoji-legend {
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎮 Emoji Catcher 🎮</h1>
+        <p class="subtitle">Catch the good vibes, avoid the bad ones!</p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">LIVES</div>
+                <div class="stat-value" id="lives">❤️❤️❤️</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">LEVEL</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="600" height="500"></canvas>
+
+        <div class="controls">
+            <p><strong>Controls:</strong> Use ← → Arrow Keys or A/D to move</p>
+            <div class="emoji-legend">
+                <p>⭐ = +10 points | 💎 = +25 points | 💰 = +50 points</p>
+                <p>💣 = Lose a life | ☠️ = Lose 2 lives</p>
+            </div>
+        </div>
+
+        <button class="btn" id="startBtn" onclick="startGame()">START GAME</button>
+
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER!</h2>
+            <p>Final Score:</p>
+            <p id="finalScore">0</p>
+            <br>
+            <button class="btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameRunning = false;
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameSpeed = 2;
+        let spawnRate = 0.02;
+
+        // Player (basket)
+        const player = {
+            x: canvas.width / 2 - 40,
+            y: canvas.height - 80,
+            width: 80,
+            height: 60,
+            speed: 7,
+            dx: 0
+        };
+
+        // Falling objects
+        const fallingObjects = [];
+
+        // Emoji types
+        const emojiTypes = [
+            { emoji: '⭐', points: 10, isBad: false, size: 40 },
+            { emoji: '💎', points: 25, isBad: false, size: 35 },
+            { emoji: '💰', points: 50, isBad: false, size: 40 },
+            { emoji: '💣', points: 0, isBad: true, damage: 1, size: 35 },
+            { emoji: '☠️', points: 0, isBad: true, damage: 2, size: 40 }
+        ];
+
+        // Keyboard controls
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+
+        function drawPlayer() {
+            // Draw basket
+            ctx.font = '60px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('🧺', player.x + player.width / 2, player.y + player.height / 2);
+        }
+
+        function drawFallingObject(obj) {
+            ctx.font = `${obj.size}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(obj.emoji, obj.x, obj.y);
+        }
+
+        function updatePlayer() {
+            if ((keys['ArrowLeft'] || keys['a'] || keys['A']) && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if ((keys['ArrowRight'] || keys['d'] || keys['D']) && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+        }
+
+        function spawnFallingObject() {
+            if (Math.random() < spawnRate) {
+                const type = emojiTypes[Math.floor(Math.random() * emojiTypes.length)];
+                const obj = {
+                    x: Math.random() * (canvas.width - 40) + 20,
+                    y: -40,
+                    ...type,
+                    speed: gameSpeed + Math.random() * 2
+                };
+                fallingObjects.push(obj);
+            }
+        }
+
+        function updateFallingObjects() {
+            for (let i = fallingObjects.length - 1; i >= 0; i--) {
+                const obj = fallingObjects[i];
+                obj.y += obj.speed;
+
+                // Check collision with player
+                if (obj.y + 20 >= player.y &&
+                    obj.y - 20 <= player.y + player.height &&
+                    obj.x >= player.x &&
+                    obj.x <= player.x + player.width) {
+
+                    if (obj.isBad) {
+                        lives -= obj.damage;
+                        updateLives();
+                        if (lives <= 0) {
+                            endGame();
+                        }
+                    } else {
+                        score += obj.points;
+                        updateScore();
+                        checkLevelUp();
+                    }
+                    fallingObjects.splice(i, 1);
+                }
+                // Remove if off screen
+                else if (obj.y > canvas.height + 40) {
+                    fallingObjects.splice(i, 1);
+                }
+            }
+        }
+
+        function checkLevelUp() {
+            const newLevel = Math.floor(score / 200) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                gameSpeed += 0.5;
+                spawnRate = Math.min(0.04, spawnRate + 0.005);
+                document.getElementById('level').textContent = level;
+            }
+        }
+
+        function updateScore() {
+            document.getElementById('score').textContent = score;
+        }
+
+        function updateLives() {
+            const hearts = '❤️'.repeat(Math.max(0, lives));
+            const empty = '🖤'.repeat(Math.max(0, 3 - lives));
+            document.getElementById('lives').textContent = hearts + empty;
+        }
+
+        function drawBackground() {
+            // Sky gradient (already set as canvas background)
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw some clouds
+            ctx.font = '40px Arial';
+            ctx.textAlign = 'center';
+            const cloudY = 50 + Math.sin(Date.now() / 1000) * 10;
+            ctx.fillText('☁️', 100, cloudY);
+            ctx.fillText('☁️', 300, cloudY + 20);
+            ctx.fillText('☁️', 500, cloudY - 10);
+
+            // Draw ground
+            ctx.fillStyle = '#90EE90';
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+            ctx.fillStyle = '#8B4513';
+            ctx.fillRect(0, canvas.height - 55, canvas.width, 5);
+        }
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            drawBackground();
+            updatePlayer();
+            spawnFallingObject();
+            updateFallingObjects();
+
+            // Draw all falling objects
+            fallingObjects.forEach(obj => drawFallingObject(obj));
+
+            // Draw player
+            drawPlayer();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+
+            gameRunning = true;
+            score = 0;
+            lives = 3;
+            level = 1;
+            gameSpeed = 2;
+            spawnRate = 0.02;
+            fallingObjects.length = 0;
+            player.x = canvas.width / 2 - 40;
+
+            updateScore();
+            updateLives();
+            document.getElementById('level').textContent = level;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('startBtn').textContent = 'RESTART';
+
+            gameLoop();
+        }
+
+        function endGame() {
+            gameRunning = false;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // Draw initial state
+        drawBackground();
+        drawPlayer();
+    </script>
+</body>
+</html>
