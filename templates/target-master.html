@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Target Master - Test Your Aim!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+            overflow: hidden;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            position: relative;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        #gameCanvas {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            border: 4px solid white;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            display: block;
+            margin: 20px auto;
+            cursor: crosshair;
+            position: relative;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 150px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            margin-top: 5px;
+        }
+
+        .controls {
+            margin: 20px 0;
+            font-size: 1.1em;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .controls p {
+            margin: 5px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .game-over h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #f5576c;
+        }
+
+        .game-over p {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        #finalScore {
+            font-size: 2em;
+            color: #f093fb;
+            font-weight: bold;
+        }
+
+        .target-legend {
+            margin-top: 15px;
+            font-size: 0.9em;
+            opacity: 0.9;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .combo-display {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 1.2em;
+            font-weight: bold;
+            display: none;
+        }
+
+        .combo-multiplier {
+            color: #f093fb;
+            font-size: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">
+        <button class="btn btn-secondary">← BACK TO MENU</button>
+    </a>
+
+    <div class="game-container">
+        <h1>🎯 Target Master 🎯</h1>
+        <p class="subtitle">Test your aim and reflexes!</p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">SCORE</div>
+                <div class="stat-value" id="score">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">TIME</div>
+                <div class="stat-value" id="timer">60</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">LEVEL</div>
+                <div class="stat-value" id="level">1</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">ACCURACY</div>
+                <div class="stat-value" id="accuracy">0%</div>
+            </div>
+        </div>
+
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+
+        <div class="combo-display" id="comboDisplay">
+            COMBO: <span class="combo-multiplier" id="comboValue">x1</span>
+        </div>
+
+        <div class="controls">
+            <p><strong>Instructions:</strong> Click on the targets as fast as you can!</p>
+            <div class="target-legend">
+                <p>🎯 Target = +10 points | ⭐ Star = +20 points | 💎 Diamond = +50 points</p>
+                <p>💣 Bomb = -20 points | 👻 Ghost = Disappears quickly!</p>
+                <p>Hit multiple targets in a row to build your combo multiplier!</p>
+            </div>
+        </div>
+
+        <button class="btn" id="startBtn" onclick="startGame()">START GAME</button>
+
+        <div class="game-over" id="gameOver">
+            <h2>GAME OVER!</h2>
+            <p>Final Score:</p>
+            <p id="finalScore">0</p>
+            <p id="finalStats"></p>
+            <br>
+            <button class="btn" onclick="restartGame()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let gameRunning = false;
+        let score = 0;
+        let timeLeft = 60;
+        let level = 1;
+        let totalClicks = 0;
+        let successfulHits = 0;
+        let combo = 0;
+        let maxCombo = 0;
+        let timerInterval = null;
+
+        // Target types
+        const targetTypes = [
+            { emoji: '🎯', points: 10, lifetime: 2000, size: 50, probability: 0.4 },
+            { emoji: '⭐', points: 20, lifetime: 1500, size: 45, probability: 0.25 },
+            { emoji: '💎', points: 50, lifetime: 1200, size: 40, probability: 0.15 },
+            { emoji: '💣', points: -20, lifetime: 2500, size: 45, probability: 0.1, isBad: true },
+            { emoji: '👻', points: 30, lifetime: 800, size: 50, probability: 0.1 }
+        ];
+
+        // Active targets
+        let targets = [];
+        let particles = [];
+        let spawnInterval = null;
+
+        class Target {
+            constructor(type) {
+                this.type = type;
+                this.x = Math.random() * (canvas.width - 100) + 50;
+                this.y = Math.random() * (canvas.height - 100) + 50;
+                this.size = type.size;
+                this.emoji = type.emoji;
+                this.points = type.points;
+                this.isBad = type.isBad || false;
+                this.lifetime = type.lifetime;
+                this.createdAt = Date.now();
+                this.fadeOut = false;
+                this.alpha = 1;
+                this.scale = 0;
+                this.maxScale = 1;
+            }
+
+            update() {
+                const age = Date.now() - this.createdAt;
+
+                // Grow animation
+                if (this.scale < this.maxScale) {
+                    this.scale += 0.1;
+                }
+
+                // Check if lifetime expired
+                if (age > this.lifetime - 300) {
+                    this.fadeOut = true;
+                }
+
+                if (this.fadeOut) {
+                    this.alpha -= 0.05;
+                }
+
+                return this.alpha > 0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+
+                // Draw target circle background
+                const gradient = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size);
+                if (this.isBad) {
+                    gradient.addColorStop(0, 'rgba(255, 100, 100, 0.6)');
+                    gradient.addColorStop(1, 'rgba(200, 0, 0, 0.3)');
+                } else {
+                    gradient.addColorStop(0, 'rgba(255, 255, 255, 0.8)');
+                    gradient.addColorStop(1, 'rgba(100, 200, 255, 0.4)');
+                }
+
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * this.scale, 0, Math.PI * 2);
+                ctx.fill();
+
+                // Draw emoji
+                ctx.font = `${this.size * this.scale * 1.2}px Arial`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, this.x, this.y);
+
+                ctx.restore();
+            }
+
+            isClicked(mouseX, mouseY) {
+                const distance = Math.sqrt(
+                    Math.pow(mouseX - this.x, 2) + Math.pow(mouseY - this.y, 2)
+                );
+                return distance < this.size * this.scale;
+            }
+        }
+
+        class Particle {
+            constructor(x, y, text, color) {
+                this.x = x;
+                this.y = y;
+                this.text = text;
+                this.color = color;
+                this.velocity = { x: (Math.random() - 0.5) * 3, y: -3 - Math.random() * 2 };
+                this.alpha = 1;
+                this.life = 60;
+            }
+
+            update() {
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.velocity.y += 0.1; // gravity
+                this.alpha -= 0.02;
+                this.life--;
+                return this.life > 0;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.font = 'bold 24px Arial';
+                ctx.fillStyle = this.color;
+                ctx.textAlign = 'center';
+                ctx.fillText(this.text, this.x, this.y);
+                ctx.restore();
+            }
+        }
+
+        function spawnTarget() {
+            if (!gameRunning) return;
+
+            // Increase spawn rate with level
+            const maxTargets = Math.min(3 + level, 8);
+            if (targets.length < maxTargets) {
+                const rand = Math.random();
+                let cumulative = 0;
+
+                for (const type of targetTypes) {
+                    cumulative += type.probability;
+                    if (rand < cumulative) {
+                        targets.push(new Target(type));
+                        break;
+                    }
+                }
+            }
+        }
+
+        function updateTargets() {
+            targets = targets.filter(target => target.update());
+        }
+
+        function updateParticles() {
+            particles = particles.filter(particle => particle.update());
+        }
+
+        function drawTargets() {
+            targets.forEach(target => target.draw());
+        }
+
+        function drawParticles() {
+            particles.forEach(particle => particle.draw());
+        }
+
+        function drawBackground() {
+            // Animated starfield background
+            ctx.fillStyle = 'rgba(30, 60, 114, 0.3)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Stars
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            for (let i = 0; i < 50; i++) {
+                const x = (i * 97) % canvas.width;
+                const y = (i * 53) % canvas.height;
+                const twinkle = Math.sin(Date.now() / 200 + i) * 0.5 + 0.5;
+                ctx.globalAlpha = twinkle;
+                ctx.fillRect(x, y, 2, 2);
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function updateScore(points) {
+            score += points * (combo > 1 ? combo : 1);
+            document.getElementById('score').textContent = score;
+            checkLevelUp();
+        }
+
+        function updateAccuracy() {
+            const accuracy = totalClicks > 0 ? Math.round((successfulHits / totalClicks) * 100) : 0;
+            document.getElementById('accuracy').textContent = accuracy + '%';
+        }
+
+        function updateCombo(hit) {
+            if (hit) {
+                combo++;
+                if (combo > maxCombo) maxCombo = combo;
+
+                if (combo > 1) {
+                    document.getElementById('comboDisplay').style.display = 'block';
+                    document.getElementById('comboValue').textContent = 'x' + combo;
+                }
+            } else {
+                combo = 0;
+                document.getElementById('comboDisplay').style.display = 'none';
+            }
+        }
+
+        function checkLevelUp() {
+            const newLevel = Math.floor(score / 300) + 1;
+            if (newLevel > level) {
+                level = newLevel;
+                document.getElementById('level').textContent = level;
+                // Show level up particle
+                particles.push(new Particle(
+                    canvas.width / 2,
+                    canvas.height / 2,
+                    'LEVEL UP!',
+                    '#f093fb'
+                ));
+            }
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            document.getElementById('timer').textContent = timeLeft;
+
+            if (timeLeft <= 0) {
+                endGame();
+            }
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!gameRunning) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            totalClicks++;
+            let hitTarget = false;
+
+            for (let i = targets.length - 1; i >= 0; i--) {
+                const target = targets[i];
+                if (target.isClicked(mouseX, mouseY)) {
+                    hitTarget = true;
+                    successfulHits++;
+
+                    // Update score
+                    updateScore(target.points);
+
+                    // Create particle effect
+                    const pointsText = (target.points > 0 ? '+' : '') + (target.points * (combo > 1 ? combo : 1));
+                    const color = target.isBad ? '#ff4444' : '#44ff44';
+                    particles.push(new Particle(target.x, target.y, pointsText, color));
+
+                    // Update combo
+                    updateCombo(!target.isBad);
+
+                    // Remove target
+                    targets.splice(i, 1);
+                    break;
+                }
+            }
+
+            if (!hitTarget) {
+                updateCombo(false);
+            }
+
+            updateAccuracy();
+        });
+
+        function gameLoop() {
+            if (!gameRunning) return;
+
+            drawBackground();
+            updateTargets();
+            updateParticles();
+            drawTargets();
+            drawParticles();
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+
+            gameRunning = true;
+            score = 0;
+            timeLeft = 60;
+            level = 1;
+            totalClicks = 0;
+            successfulHits = 0;
+            combo = 0;
+            maxCombo = 0;
+            targets = [];
+            particles = [];
+
+            document.getElementById('score').textContent = score;
+            document.getElementById('timer').textContent = timeLeft;
+            document.getElementById('level').textContent = level;
+            document.getElementById('accuracy').textContent = '0%';
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('startBtn').textContent = 'RESTART';
+            document.getElementById('comboDisplay').style.display = 'none';
+
+            // Start timer
+            timerInterval = setInterval(updateTimer, 1000);
+
+            // Start spawning targets
+            spawnInterval = setInterval(spawnTarget, 600 - (level * 50));
+
+            gameLoop();
+        }
+
+        function endGame() {
+            gameRunning = false;
+            clearInterval(timerInterval);
+            clearInterval(spawnInterval);
+
+            const accuracy = totalClicks > 0 ? Math.round((successfulHits / totalClicks) * 100) : 0;
+
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('finalStats').innerHTML =
+                `Accuracy: ${accuracy}% | Max Combo: x${maxCombo}<br>Targets Hit: ${successfulHits}/${totalClicks}`;
+            document.getElementById('gameOver').style.display = 'block';
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        // Draw initial state
+        drawBackground();
+    </script>
+</body>
+</html>
