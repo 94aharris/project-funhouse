@@ -10,5 +10,9 @@ def index():
 def emoji_catcher():
     return render_template('emoji-catcher.html')
 
+@app.route('/game/puzzle-quest')
+def puzzle_quest():
+    return render_template('puzzle-quest.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
