@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Puzzle Quest - Slide to Victory!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .game-container {
+            text-align: center;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            max-width: 650px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-bottom: 20px;
+            opacity: 0.9;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            font-size: 1.3em;
+            font-weight: bold;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 10px;
+            min-width: 120px;
+        }
+
+        .stat-label {
+            font-size: 0.8em;
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-size: 1.5em;
+            margin-top: 5px;
+        }
+
+        .difficulty-selector {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .difficulty-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            padding: 10px 20px;
+            font-size: 1em;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+
+        .difficulty-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .difficulty-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-color: #f5576c;
+        }
+
+        #puzzleBoard {
+            display: grid;
+            gap: 8px;
+            margin: 20px auto;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            width: fit-content;
+        }
+
+        .tile {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 3px solid rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            font-size: 2em;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
+
+        .tile:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .tile.empty {
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px dashed rgba(255, 255, 255, 0.3);
+            cursor: default;
+            box-shadow: none;
+        }
+
+        .tile.empty:hover {
+            transform: none;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: bold;
+            margin: 5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        .win-message {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.95);
+            padding: 40px 60px;
+            border-radius: 20px;
+            text-align: center;
+            z-index: 100;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .win-message h2 {
+            font-size: 3em;
+            margin-bottom: 20px;
+            color: #f093fb;
+            text-shadow: 0 0 20px rgba(240, 147, 251, 0.5);
+        }
+
+        .win-message p {
+            font-size: 1.5em;
+            margin: 10px 0;
+        }
+
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .instructions {
+            margin: 20px 0;
+            font-size: 1em;
+            opacity: 0.9;
+            background: rgba(255, 255, 255, 0.15);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+
+            .tile {
+                font-size: 1.5em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="back-button">
+        <button class="btn btn-secondary">← BACK TO MENU</button>
+    </a>
+
+    <div class="game-container">
+        <h1>🧩 Puzzle Quest 🧩</h1>
+        <p class="subtitle">Slide the tiles to solve the puzzle!</p>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="stat-label">MOVES</div>
+                <div class="stat-value" id="moves">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">TIME</div>
+                <div class="stat-value" id="time">0:00</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-label">BEST TIME</div>
+                <div class="stat-value" id="bestTime">--:--</div>
+            </div>
+        </div>
+
+        <div class="difficulty-selector">
+            <button class="difficulty-btn" onclick="setDifficulty(3)">Easy (3×3)</button>
+            <button class="difficulty-btn active" onclick="setDifficulty(4)">Medium (4×4)</button>
+            <button class="difficulty-btn" onclick="setDifficulty(5)">Hard (5×5)</button>
+        </div>
+
+        <div id="puzzleBoard"></div>
+
+        <div class="instructions">
+            <p><strong>How to Play:</strong> Click on a tile next to the empty space to slide it. Arrange all numbers in order from 1 to complete the puzzle!</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn" onclick="shufflePuzzle()">NEW GAME</button>
+            <button class="btn btn-secondary" onclick="solvePuzzle()">HINT</button>
+        </div>
+
+        <div class="win-message" id="winMessage">
+            <h2>🎉 PUZZLE SOLVED! 🎉</h2>
+            <p>Moves: <span id="finalMoves">0</span></p>
+            <p>Time: <span id="finalTime">0:00</span></p>
+            <br>
+            <button class="btn" onclick="playAgain()">PLAY AGAIN</button>
+        </div>
+    </div>
+
+    <script>
+        let gridSize = 4;
+        let tiles = [];
+        let emptyPos = { row: 0, col: 0 };
+        let moves = 0;
+        let startTime = null;
+        let timerInterval = null;
+        let gameStarted = false;
+        let bestTimes = {
+            3: null,
+            4: null,
+            5: null
+        };
+
+        // Load best times from localStorage
+        function loadBestTimes() {
+            const saved = localStorage.getItem('puzzleQuestBestTimes');
+            if (saved) {
+                bestTimes = JSON.parse(saved);
+            }
+            updateBestTimeDisplay();
+        }
+
+        function saveBestTime(size, time) {
+            if (!bestTimes[size] || time < bestTimes[size]) {
+                bestTimes[size] = time;
+                localStorage.setItem('puzzleQuestBestTimes', JSON.stringify(bestTimes));
+                updateBestTimeDisplay();
+            }
+        }
+
+        function updateBestTimeDisplay() {
+            const bestTime = bestTimes[gridSize];
+            if (bestTime) {
+                const minutes = Math.floor(bestTime / 60);
+                const seconds = bestTime % 60;
+                document.getElementById('bestTime').textContent =
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            } else {
+                document.getElementById('bestTime').textContent = '--:--';
+            }
+        }
+
+        function setDifficulty(size) {
+            gridSize = size;
+
+            // Update active button
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            updateBestTimeDisplay();
+            initPuzzle();
+        }
+
+        function initPuzzle() {
+            gameStarted = false;
+            clearInterval(timerInterval);
+            startTime = null;
+            moves = 0;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('time').textContent = '0:00';
+            document.getElementById('winMessage').style.display = 'none';
+
+            // Create solved puzzle
+            tiles = [];
+            let num = 1;
+            for (let i = 0; i < gridSize; i++) {
+                tiles[i] = [];
+                for (let j = 0; j < gridSize; j++) {
+                    if (i === gridSize - 1 && j === gridSize - 1) {
+                        tiles[i][j] = 0; // Empty tile
+                        emptyPos = { row: i, col: j };
+                    } else {
+                        tiles[i][j] = num++;
+                    }
+                }
+            }
+
+            renderBoard();
+        }
+
+        function renderBoard() {
+            const board = document.getElementById('puzzleBoard');
+            board.innerHTML = '';
+
+            // Calculate tile size based on grid size
+            const tileSize = gridSize === 3 ? 100 : gridSize === 4 ? 80 : 65;
+
+            board.style.gridTemplateColumns = `repeat(${gridSize}, ${tileSize}px)`;
+            board.style.gridTemplateRows = `repeat(${gridSize}, ${tileSize}px)`;
+
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    const tile = document.createElement('div');
+                    tile.className = 'tile';
+
+                    if (tiles[i][j] === 0) {
+                        tile.className += ' empty';
+                    } else {
+                        tile.textContent = tiles[i][j];
+                        tile.onclick = () => moveTile(i, j);
+                    }
+
+                    tile.style.width = `${tileSize}px`;
+                    tile.style.height = `${tileSize}px`;
+                    tile.style.fontSize = gridSize === 5 ? '1.5em' : '2em';
+
+                    board.appendChild(tile);
+                }
+            }
+        }
+
+        function moveTile(row, col) {
+            // Check if tile is adjacent to empty space
+            const rowDiff = Math.abs(row - emptyPos.row);
+            const colDiff = Math.abs(col - emptyPos.col);
+
+            if ((rowDiff === 1 && colDiff === 0) || (rowDiff === 0 && colDiff === 1)) {
+                // Start timer on first move
+                if (!gameStarted) {
+                    gameStarted = true;
+                    startTime = Date.now();
+                    timerInterval = setInterval(updateTimer, 1000);
+                }
+
+                // Swap tiles
+                tiles[emptyPos.row][emptyPos.col] = tiles[row][col];
+                tiles[row][col] = 0;
+                emptyPos = { row, col };
+
+                moves++;
+                document.getElementById('moves').textContent = moves;
+
+                renderBoard();
+                checkWin();
+            }
+        }
+
+        function updateTimer() {
+            if (!startTime) return;
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+            document.getElementById('time').textContent =
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        function checkWin() {
+            let num = 1;
+            for (let i = 0; i < gridSize; i++) {
+                for (let j = 0; j < gridSize; j++) {
+                    if (i === gridSize - 1 && j === gridSize - 1) {
+                        if (tiles[i][j] !== 0) return false;
+                    } else {
+                        if (tiles[i][j] !== num++) return false;
+                    }
+                }
+            }
+
+            // Puzzle solved!
+            gameStarted = false;
+            clearInterval(timerInterval);
+
+            const elapsed = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+
+            document.getElementById('finalMoves').textContent = moves;
+            document.getElementById('finalTime').textContent =
+                `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            document.getElementById('winMessage').style.display = 'block';
+
+            // Save best time
+            saveBestTime(gridSize, elapsed);
+
+            return true;
+        }
+
+        function shufflePuzzle() {
+            // Reset game state
+            gameStarted = false;
+            clearInterval(timerInterval);
+            startTime = null;
+            moves = 0;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('time').textContent = '0:00';
+            document.getElementById('winMessage').style.display = 'none';
+
+            // Shuffle by making random valid moves
+            const numShuffles = gridSize * gridSize * 10;
+
+            for (let i = 0; i < numShuffles; i++) {
+                const validMoves = getValidMoves();
+                const randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+
+                // Swap without updating UI or counting moves
+                tiles[emptyPos.row][emptyPos.col] = tiles[randomMove.row][randomMove.col];
+                tiles[randomMove.row][randomMove.col] = 0;
+                emptyPos = randomMove;
+            }
+
+            renderBoard();
+        }
+
+        function getValidMoves() {
+            const validMoves = [];
+            const directions = [
+                { row: -1, col: 0 },
+                { row: 1, col: 0 },
+                { row: 0, col: -1 },
+                { row: 0, col: 1 }
+            ];
+
+            for (const dir of directions) {
+                const newRow = emptyPos.row + dir.row;
+                const newCol = emptyPos.col + dir.col;
+
+                if (newRow >= 0 && newRow < gridSize && newCol >= 0 && newCol < gridSize) {
+                    validMoves.push({ row: newRow, col: newCol });
+                }
+            }
+
+            return validMoves;
+        }
+
+        function solvePuzzle() {
+            // Show a hint by highlighting a tile that should be moved
+            const validMoves = getValidMoves();
+
+            if (validMoves.length === 0) return;
+
+            // Find the first tile that's in the wrong position
+            let hintMove = null;
+
+            for (const move of validMoves) {
+                const tileValue = tiles[move.row][move.col];
+                const correctPos = tileValue - 1;
+                const correctRow = Math.floor(correctPos / gridSize);
+                const correctCol = correctPos % gridSize;
+
+                if (move.row !== correctRow || move.col !== correctCol) {
+                    hintMove = move;
+                    break;
+                }
+            }
+
+            // If all adjacent tiles are in correct position, pick any
+            if (!hintMove) {
+                hintMove = validMoves[0];
+            }
+
+            // Briefly highlight the hint tile
+            const board = document.getElementById('puzzleBoard');
+            const tiles = board.children;
+            const index = hintMove.row * gridSize + hintMove.col;
+
+            tiles[index].style.border = '3px solid #f093fb';
+            tiles[index].style.transform = 'scale(1.1)';
+
+            setTimeout(() => {
+                tiles[index].style.border = '3px solid rgba(255, 255, 255, 0.5)';
+                tiles[index].style.transform = 'scale(1)';
+            }, 500);
+        }
+
+        function playAgain() {
+            shufflePuzzle();
+        }
+
+        // Initialize the game
+        loadBestTimes();
+        initPuzzle();
+        shufflePuzzle();
+    </script>
+</body>
+</html>

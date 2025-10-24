@@ -10,6 +10,10 @@ def index():
 def emoji_catcher():
     return render_template('emoji-catcher.html')
 
+@app.route('/game/puzzle-quest')
+def puzzle_quest():
+    return render_template('puzzle-quest.html')
+
 @app.route('/game/target-master')
 def target_master():
     return render_template('target-master.html')
