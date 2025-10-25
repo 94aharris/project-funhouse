@@ -18,5 +18,9 @@ def puzzle_quest():
 def target_master():
     return render_template('target-master.html')
 
+@app.route('/game/wordle')
+def wordle():
+    return render_template('wordle.html')
+
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
